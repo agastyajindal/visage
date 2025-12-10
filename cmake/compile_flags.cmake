@@ -1,3 +1,8 @@
+# Use static runtime library (/MT) for MSVC builds
+if (MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "MSVC runtime library")
+endif()
+
 if (MSVC)
   set(VISAGE_DEFINE_FLAG "/D")
 else()

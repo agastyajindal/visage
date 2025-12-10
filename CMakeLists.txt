@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
+
+# Enable CMAKE_MSVC_RUNTIME_LIBRARY support
+cmake_policy(SET CMP0091 NEW)
+
 project(visage VERSION 0.1.0)
 
 set(CMAKE_POLICY_DEFAULT_CMP0177 NEW)
