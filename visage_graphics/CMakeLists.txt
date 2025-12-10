@@ -86,6 +86,12 @@ set(CMAKE_MESSAGE_LOG_LEVEL "NOTICE")
 if (MSVC)
   set_target_properties(bgfx bx bimg bimg_decode bimg_encode freetype
     PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  target_compile_options(bx PRIVATE $<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
+  target_compile_options(bimg PRIVATE $<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
+  target_compile_options(bimg_decode PRIVATE $<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
+  target_compile_options(bimg_encode PRIVATE $<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
+  target_compile_options(bgfx PRIVATE $<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
+  target_compile_options(freetype PRIVATE $<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
 endif()
 
 if (MSVC)
