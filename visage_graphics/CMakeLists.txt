@@ -68,6 +68,7 @@ FetchContent_Declare(bgfx GIT_REPOSITORY https://github.com/bkaradzic/bgfx.cmake
 
 # Force static runtime for FetchContent dependencies before they are configured
 if(MSVC)
+  set(CMAKE_POLICY_DEFAULT_CMP0091 NEW)
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
