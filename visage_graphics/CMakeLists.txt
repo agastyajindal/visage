@@ -65,6 +65,12 @@ FetchContent_Declare(bgfx GIT_REPOSITORY https://github.com/bkaradzic/bgfx.cmake
   GIT_TAG v1.129.8958-499
   EXCLUDE_FROM_ALL
 )
+
+# Force static runtime for FetchContent dependencies before they are configured
+if(MSVC)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 FetchContent_MakeAvailable(bgfx)
 
 FetchContent_Declare(freetype GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
