@@ -75,6 +75,12 @@ FetchContent_Declare(freetype GIT_REPOSITORY https://gitlab.freedesktop.org/free
 FetchContent_MakeAvailable(freetype)
 set(CMAKE_MESSAGE_LOG_LEVEL "NOTICE")
 
+# Apply static runtime library (/MT) to all FetchContent dependencies on MSVC
+if (MSVC)
+  set_target_properties(bgfx bx bimg bimg_decode bimg_encode freetype
+    PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 if (MSVC)
   set(DISABLE_WARNINGS /W0)
 else ()
