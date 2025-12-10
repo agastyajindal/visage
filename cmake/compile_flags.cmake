@@ -21,6 +21,7 @@ endif()
 
 if (MSVC)
   add_compile_options(/MP /wd4244 /wd4267 /JMC)
+  add_compile_options($<$<CONFIG:Debug>:/MTd>$<$<NOT:$<CONFIG:Debug>>:/MT>)
 else()
   add_compile_options(-Wno-conversion -Wno-sign-conversion)
 endif()
