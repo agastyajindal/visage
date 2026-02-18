@@ -106,8 +106,6 @@ namespace visage {
       return;
 
     callback_handler_ = std::make_unique<GraphicsCallbackHandler>();
-    initialized_ = true;
-    startRenderThread();
 
     bgfx::Init bgfx_init;
     bgfx_init.resolution.numBackBuffers = 1;
@@ -149,11 +147,33 @@ namespace visage {
       VISAGE_ASSERT(false);
       std::string renderer_name = bgfx::getRendererName(bgfx_init.type);
       error_message_ = renderer_name + " is required and not supported on this computer.";
+      return;
     }
 
-    bgfx::init(bgfx_init);
-    VISAGE_ASSERT(bgfx::getRendererType() == bgfx_init.type);
-    swap_chain_supported_ = bgfx::getCaps()->supported & BGFX_CAPS_SWAP_CHAIN;
+    static constexpr int kMaxInitRetries = 3;
+    static constexpr int kRetryDelayMs = 500;
+
+    for (int attempt = 0; attempt < kMaxInitRetries; ++attempt) {
+      if (attempt > 0) {
+        VISAGE_LOG("bgfx::init retry attempt " + String(attempt + 1));
+        sleep(kRetryDelayMs);
+      }
+
+      startRenderThread();
+
+      if (bgfx::init(bgfx_init)) {
+        initialized_ = true;
+        VISAGE_ASSERT(bgfx::getRendererType() == bgfx_init.type);
+        swap_chain_supported_ = bgfx::getCaps()->supported & BGFX_CAPS_SWAP_CHAIN;
+        return;
+      }
+
+      // bgfx::init failed — stop render thread before retry
+      stop();
+      render_thread_started_ = false;
+    }
+
+    error_message_ = "Failed to initialize graphics backend after " + std::to_string(kMaxInitRetries) + " attempts.";
   }
 
   void Renderer::resetResolution(int width, int height) {
