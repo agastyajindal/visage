@@ -155,7 +155,7 @@ namespace visage {
 
     for (int attempt = 0; attempt < kMaxInitRetries; ++attempt) {
       if (attempt > 0) {
-        VISAGE_LOG("bgfx::init retry attempt " + String(attempt + 1));
+        VISAGE_LOG("bgfx::init retry attempt %d", attempt + 1);
         sleep(kRetryDelayMs);
       }
 
