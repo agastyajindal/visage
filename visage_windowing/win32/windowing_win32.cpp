@@ -1248,8 +1248,24 @@ namespace visage {
       // Fall through to host's original WM_SIZE handler
     }
     if (msg == WM_DPICHANGED) {
-      child_window->handleDpiChange(hwnd, l_param, w_param);
-      return 0;
+      // Don't call handleDpiChange() here — it runs SetWindowPos(hwnd) which
+      // would reposition the HOST's parent window. Instead: update DPI from
+      // the parent, resize the child to fill the parent, and forward to host.
+      DpiAwareness dpi_awareness;
+      child_window->setDpiScale(dpi_awareness.dpiScale(hwnd));
+
+      HWND child_hwnd = static_cast<HWND>(child_window->nativeHandle());
+      if (child_hwnd) {
+        RECT parent_rect;
+        GetClientRect(hwnd, &parent_rect);
+        int parent_w = parent_rect.right;
+        int parent_h = parent_rect.bottom;
+        if (parent_w > 0 && parent_h > 0) {
+          MoveWindow(child_hwnd, 0, 0, parent_w, parent_h, TRUE);
+          child_window->handleResized(parent_w, parent_h);
+        }
+      }
+      // Forward to host so it can handle its own DPI change
     }
     return CallWindowProc(child_window->parentWindowProc(), hwnd, msg, w_param, l_param);
   }
