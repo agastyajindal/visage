@@ -1232,6 +1232,21 @@ namespace visage {
       child_window->handleResizing(hwnd, l_param, w_param);
       return TRUE;
     }
+    if (msg == WM_SIZE) {
+      // Host resized the parent (e.g. after attached(), or to fit its chrome).
+      // Resize the child HWND to match. Without this, the child stays at its
+      // initial size and gets clipped if the parent shrinks.
+      HWND child_hwnd = static_cast<HWND>(child_window->nativeHandle());
+      if (child_hwnd) {
+        RECT parent_rect;
+        GetClientRect(hwnd, &parent_rect);
+        int parent_w = parent_rect.right;
+        int parent_h = parent_rect.bottom;
+        if (parent_w > 0 && parent_h > 0)
+          MoveWindow(child_hwnd, 0, 0, parent_w, parent_h, TRUE);
+      }
+      // Fall through to host's original WM_SIZE handler
+    }
     if (msg == WM_DPICHANGED) {
       child_window->handleDpiChange(hwnd, l_param, w_param);
       return 0;
@@ -1430,6 +1445,20 @@ namespace visage {
 
   std::unique_ptr<Window> createPluginWindow(const Dimension& width, const Dimension& height,
                                              void* parent_handle) {
+    // For plugin child windows: match the parent's actual size instead of
+    // DPI-scaling the requested dimensions. The host already sized the parent
+    // based on getSize(). DPI-scaling here creates an oversized child that
+    // overflows a DPI-unaware host's parent and gets clipped.
+    HWND parent_hwnd = static_cast<HWND>(parent_handle);
+    if (parent_hwnd) {
+      RECT parent_rect;
+      GetClientRect(parent_hwnd, &parent_rect);
+      int parent_w = parent_rect.right;
+      int parent_h = parent_rect.bottom;
+      if (parent_w > 0 && parent_h > 0)
+        return std::make_unique<WindowWin32>(parent_w, parent_h, parent_handle);
+    }
+    // Fallback: parent not yet sized, use DPI-scaled dimensions
     IBounds bounds = computeWindowBounds(0, 0, width, height);
     return std::make_unique<WindowWin32>(bounds.width(), bounds.height(), parent_handle);
   }
@@ -1477,7 +1506,13 @@ namespace visage {
     static constexpr int kWindowFlags = WS_CHILD;
 
     DpiAwareness dpi_awareness;
-    setDpiScale(dpi_awareness.dpiScale());
+    // For plugin child windows: use per-window DPI from the parent HWND rather
+    // than system DPI. This matches the DPI context the host is actually using.
+    // If the host is DPI-unaware, GetDpiForWindow returns 96 → scale 1.0, which
+    // correctly avoids DPI-scaling in a virtualized host environment.
+    HWND parent_hwnd = static_cast<HWND>(parent_handle);
+    float dpi = parent_hwnd ? dpi_awareness.dpiScale(parent_hwnd) : dpi_awareness.dpiScale();
+    setDpiScale(dpi);
 
     registerWindowClass();
     window_class_.lpfnWndProc = windowProcedure;
@@ -1730,7 +1765,13 @@ namespace visage {
     int height = rect.bottom - rect.top - borders.height();
 
     DpiAwareness dpi_awareness;
-    setDpiScale(dpi_awareness.dpiScale(hwnd));
+    // For plugin child windows: derive DPI from the parent HWND, not the child.
+    // The child may have been created as PER_MONITOR_AWARE_V2 (from the thread
+    // context) while the host's parent is DPI-unaware. GetDpiForWindow(child)
+    // returns the actual monitor DPI, but the parent operates at 96 DPI — using
+    // the child's DPI would cause a mismatch that double-scales the rendering.
+    HWND dpi_source = parent_handle_ ? parent_handle_ : hwnd;
+    setDpiScale(dpi_awareness.dpiScale(dpi_source));
     handleResized(width, height);
   }
 

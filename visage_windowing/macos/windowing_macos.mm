@@ -879,6 +879,15 @@ namespace visage {
     view_delegate_ = [[VisageAppViewDelegate alloc] initWithWindow:this];
     view_.delegate = view_delegate_;
     view_.allow_quit = false;
+
+    // Track parent view size changes automatically. Without this, when the host
+    // resizes the parent after attached() (e.g. Fender Studio Pro 8 adding chrome,
+    // or any host layout change), the plugin view stays at its original size and
+    // the bottom/right gets clipped. NSViewWidthSizable | NSViewHeightSizable makes
+    // the view fill the parent — then viewDidEndLiveResize / setFrameSize triggers
+    // our resize handling.
+    [view_ setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+
     [parent_view_ addSubview:view_];
 
     NativeWindowLookup::instance().addWindow(this);
@@ -945,8 +954,25 @@ namespace visage {
   }
 
   void WindowMac::resetBackingScale() {
-    if (window_handle_)
-      setDpiScale([window_handle_ backingScaleFactor]);
+    if (!window_handle_)
+      return;
+
+    float newScale = [window_handle_ backingScaleFactor];
+    setDpiScale(newScale);
+
+    // For plugin windows: recalculate client dimensions from the view's point
+    // frame and the new backing scale. Without this, client_width_/client_height_
+    // remain stale (computed from defaultDpiScale() at construction time), causing
+    // the rendering viewport to mismatch the actual Metal drawable — which clips
+    // the bottom of the UI when the DAW window is on a different-DPI display than
+    // [NSScreen mainScreen], or when the host embeds the view after attached().
+    if (parent_view_ != nullptr && view_ != nil) {
+      NSRect frame = [view_ frame];
+      int pixelW = std::round(frame.size.width * newScale);
+      int pixelH = std::round(frame.size.height * newScale);
+      if (pixelW > 0 && pixelH > 0 && (pixelW != clientWidth() || pixelH != clientHeight()))
+        handleResized(pixelW, pixelH);
+    }
   }
 
   void WindowMac::windowContentsResized(int width, int height) {

@@ -81,6 +81,16 @@ namespace visage {
 
   void WindowEventHandler::handleResized(int width, int height) {
     VISAGE_ASSERT(width >= 0 && height >= 0);
+
+    // Sync Frame DPI from Window before converting native→logical in setNativeBounds.
+    // When resetBackingScale() changes the Window's dpi_scale_ and then calls
+    // handleResized(), the Frame's dpi_scale_ is still stale. Without this sync,
+    // setNativeBounds divides by the old DPI, producing wrong logical bounds on
+    // the TopLevelFrame (e.g. 640×400 instead of 1280×800), which breaks mouse
+    // hit-testing until the next resize.
+    if (window_)
+      content_frame_->setDpiScale(window_->dpiScale());
+
     content_frame_->setNativeBounds(0, 0, width, height);
     content_frame_->redraw();
   }
