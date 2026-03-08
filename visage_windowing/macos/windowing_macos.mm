@@ -336,6 +336,7 @@ namespace visage {
 }
 
 - (void)mtkView:(MTKView*)view drawableSizeWillChange:(CGSize)size {
+  fprintf(stderr, "[Visage] drawableSizeWillChange: %.0fx%.0f, view frame: %.0fx%.0f\n", size.width, size.height, view.frame.size.width, view.frame.size.height);
   self.visage_window->handleNativeResize(size.width, size.height);
 }
 
@@ -986,12 +987,22 @@ namespace visage {
     frame.size.width = w + borders.x;
     frame.size.height = h + borders.y;
 
-    [view_ setFrameSize:CGSizeMake(w, h)];
+    fprintf(stderr, "[Visage] windowContentsResized: native=%dx%d, logical=%.0fx%.0f, borders=%.0fx%.0f, targetFrame=%.0fx%.0f\n",
+          width, height, w, h, borders.x, borders.y, frame.size.width, frame.size.height);
+
     if (parent_view_ == nullptr) {
-      [window_handle_ setFrame:NSMakeRect(x, y, frame.size.width, frame.size.height)
+      // Standalone Visage window: resize both the view and the NSWindow.
+      [view_ setFrameSize:CGSizeMake(w, h)];
+      NSRect oldFrame = [window_handle_ frame];
+      float adjustedY = oldFrame.origin.y + oldFrame.size.height - frame.size.height;
+      [window_handle_ setFrame:NSMakeRect(oldFrame.origin.x, adjustedY, frame.size.width, frame.size.height)
                        display:YES
-                       animate:true];
+                       animate:NO];
     }
+    // Plugin windows: do NOT call [view_ setFrameSize:] here. The view has
+    // NSViewWidthSizable | NSViewHeightSizable autoresizing mask, so it will
+    // be resized automatically when the parent/host resizes. Calling setFrameSize
+    // here AND having the parent resize causes the view to grow by the delta twice.
   }
 
   void WindowMac::show() {
