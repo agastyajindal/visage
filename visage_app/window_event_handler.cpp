@@ -89,7 +89,7 @@ namespace visage {
     // the TopLevelFrame (e.g. 640×400 instead of 1280×800), which breaks mouse
     // hit-testing until the next resize.
     if (window_)
-      content_frame_->setDpiScale(window_->dpiScale());
+      content_frame_->setDpiScale(window_->dpiScale() * editor_->globalScale());
 
     content_frame_->setNativeBounds(0, 0, width, height);
     content_frame_->redraw();

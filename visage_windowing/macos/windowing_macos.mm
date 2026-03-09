@@ -336,7 +336,6 @@ namespace visage {
 }
 
 - (void)mtkView:(MTKView*)view drawableSizeWillChange:(CGSize)size {
-  fprintf(stderr, "[Visage] drawableSizeWillChange: %.0fx%.0f, view frame: %.0fx%.0f\n", size.width, size.height, view.frame.size.width, view.frame.size.height);
   self.visage_window->handleNativeResize(size.width, size.height);
 }
 
@@ -367,6 +366,10 @@ namespace visage {
 }
 
 - (BOOL)acceptsFirstResponder {
+  return YES;
+}
+
+- (BOOL)acceptsFirstMouse:(NSEvent*)event {
   return YES;
 }
 
@@ -986,9 +989,6 @@ namespace visage {
     Point borders = windowBorderSize(window_handle_);
     frame.size.width = w + borders.x;
     frame.size.height = h + borders.y;
-
-    fprintf(stderr, "[Visage] windowContentsResized: native=%dx%d, logical=%.0fx%.0f, borders=%.0fx%.0f, targetFrame=%.0fx%.0f\n",
-          width, height, w, h, borders.x, borders.y, frame.size.width, frame.size.height);
 
     if (parent_view_ == nullptr) {
       // Standalone Visage window: resize both the view and the NSWindow.

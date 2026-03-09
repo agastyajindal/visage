@@ -46,7 +46,6 @@ namespace visage {
 
   void Window::handleResized(int width, int height) {
     VISAGE_ASSERT(width >= 0 && height >= 0);
-    fprintf(stderr, "[Visage] Window::handleResized: %dx%d (was %dx%d, dpi=%.1f)\n", width, height, client_width_, client_height_, dpi_scale_);
     client_width_ = width;
     client_height_ = height;
     if (event_handler_)
@@ -96,7 +95,6 @@ namespace visage {
   }
 
   void Window::setWindowSize(int width, int height) {
-    fprintf(stderr, "[Visage] Window::setWindowSize: %dx%d (dpi=%.1f, native=%dx%d)\n", width, height, dpi_scale_, (int)std::round(width * dpi_scale_), (int)std::round(height * dpi_scale_));
     setNativeWindowSize(std::round(width * dpi_scale_), std::round(height * dpi_scale_));
   }
 

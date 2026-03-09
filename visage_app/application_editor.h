@@ -75,6 +75,9 @@ namespace visage {
 
     Window* window() const { return window_; }
 
+    float globalScale() const { return global_scale_; }
+    void setGlobalScale(float scale) { global_scale_ = scale; top_level_->resized(); }
+
     void drawStaleChildren();
 
     void setMinimumDimensions(float width, float height) {
@@ -119,6 +122,7 @@ namespace visage {
     CallbackList<void()> on_window_contents_resized_;
 
     float fixed_aspect_ratio_ = 0.0f;
+    float global_scale_ = 1.0f;
     float min_width_ = 0.0f;
     float min_height_ = 0.0f;
 

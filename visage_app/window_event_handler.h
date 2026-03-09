@@ -41,8 +41,8 @@ namespace visage {
     void giveUpFocus(Frame* frame);
 
     Point lastMousePosition() const { return last_mouse_position_; }
-    IPoint convertToNative(const Point& point) const { return window_->convertToNative(point); }
-    Point convertToLogical(const IPoint& point) const { return window_->convertToLogical(point); }
+    IPoint convertToNative(const Point& point) const { return IPoint(point * content_frame_->dpiScale()); }
+    Point convertToLogical(const IPoint& point) const { return Point(point) / content_frame_->dpiScale(); }
 
     MouseEvent mouseEvent(int x, int y, int button_state, int modifiers);
     MouseEvent buttonMouseEvent(MouseButton button_id, int x, int y, int button_state, int modifiers);
