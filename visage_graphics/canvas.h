@@ -456,6 +456,14 @@ namespace visage {
     }
 
     template<typename T1, typename T2, typename T3, typename T4>
+    void rawImage(const unsigned char* rgba_data, int src_width, int src_height,
+                  const T1& x, const T2& y, const T3& width, const T4& height) {
+      int draw_w = std::round(pixels(width));
+      int draw_h = std::round(pixels(height));
+      addRawImage(rgba_data, src_width, src_height, pixels(x), pixels(y), draw_w, draw_h);
+    }
+
+    template<typename T1, typename T2, typename T3, typename T4>
     void shader(Shader* shader, const T1& x, const T2& y, const T3& width, const T4& height) {
       addShape(ShaderWrapper(state_.clamp, state_.brush, state_.x + pixels(x), state_.y + pixels(y),
                              pixels(width), pixels(height), shader));
@@ -781,6 +789,14 @@ namespace visage {
     void addImage(const Image& image, float x, float y) {
       addShape(ImageWrapper(state_.clamp, state_.brush, state_.x + x, state_.y + y, image.width,
                             image.height, image, imageAtlas()));
+    }
+
+    void addRawImage(const unsigned char* rgba_data, int src_width, int src_height,
+                     float x, float y, int draw_width, int draw_height) {
+      Image img(rgba_data, src_width * src_height * 4, src_width, src_height);
+      img.raw = true;
+      addShape(ImageWrapper(state_.clamp, state_.brush, state_.x + x, state_.y + y,
+                            draw_width, draw_height, img, imageAtlas(), true));
     }
 
     void addGraphLine(const GraphData& data, float x, float y, float width, float height, float thickness) {
