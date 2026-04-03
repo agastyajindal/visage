@@ -455,9 +455,9 @@ namespace visage {
     static const EmbeddedFile& fragmentShader();
 
     ImageWrapper(const ClampBounds& clamp, const PackedBrush* brush, float x, float y, float width,
-                 float height, const Image& image, ImageAtlas* image_atlas, bool force_update = false) :
+                 float height, const Image& image, ImageAtlas* image_atlas) :
         Shape(image_atlas, clamp, brush, x, y, width, height),
-        packed_image(image_atlas->addImage(image, force_update)), image_atlas(image_atlas) {
+        packed_image(image_atlas->addImage(image)), image_atlas(image_atlas) {
       if (width == 0.0f) {
         this->width = packed_image.w();
         this->height = packed_image.h();
