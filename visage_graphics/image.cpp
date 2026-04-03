@@ -87,7 +87,7 @@ namespace visage {
 
   ImageAtlas::~ImageAtlas() = default;
 
-  ImageAtlas::PackedImage ImageAtlas::addImage(const Image& image) {
+  ImageAtlas::PackedImage ImageAtlas::addImage(const Image& image, bool force_update) {
     if (images_.count(image) == 0) {
       int width = image.width;
       int height = image.height;
@@ -108,6 +108,8 @@ namespace visage {
       updateImage(packed_image_rect.get());
       images_[image] = std::move(packed_image_rect);
     }
+    else if (force_update)
+      updateImage(images_[image].get());
 
     stale_images_.erase(image);
 
@@ -122,7 +124,7 @@ namespace visage {
   ImageAtlas::PackedImage ImageAtlas::addData(const unsigned char* data, int width, int height) {
     Image image(data, width * height * 4, width, height);
     image.raw = true;
-    return addImage(image);
+    return addImage(image, true);
   }
 
   void ImageAtlas::resize() {

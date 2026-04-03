@@ -229,7 +229,7 @@ namespace visage {
     ImageAtlas(DataType data_type);
     virtual ~ImageAtlas();
 
-    PackedImage addImage(const Image& image);
+    PackedImage addImage(const Image& image, bool force_update = false);
     PackedImage addData(const unsigned char* data, int width, int height = 1);
     void clearStaleImages() {
       for (const auto& stale : stale_images_) {
